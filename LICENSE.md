@@ -1,8 +1,8 @@
-Copyright © 2022-2023, UChicago Argonne, LLC
+Copyright © 2022-2024, UChicago Argonne, LLC
 
 All Rights Reserved
 
-Software Name: PROMISE
+Software Name: Solar-LEAP
 
 By: Argonne National Laboratory
 
