@@ -110,7 +110,7 @@ def draw_plot_f3 (inv_num, canvas_fig_ax_dict, day, day_it, plot_data, maint_na_
     tab_summary_cell_text1 = plot_data[f'i{inv_num}'][9]
     tab_summary_cell_text2 = tab_summary_cell_text1
 
-    tab_summary_cell_color1 = [['g'], ['r'], ['w'], ['w']]
+    tab_summary_cell_color1 = [['w', 'g'], ['w', 'r'], ['w', 'w'], ['w', 'w']]
     tab_summary_cell_color2 = tab_summary_cell_color1
 
     if (maint_na_days [f'i1'] != 0 and maint_na_days [f'i2'] != 0):
@@ -118,9 +118,9 @@ def draw_plot_f3 (inv_num, canvas_fig_ax_dict, day, day_it, plot_data, maint_na_
         na_reduct_per = round (-na_reduct_per*100, 1)
         cost_reduct_per = (maint_cost[f'i2'] - maint_cost[f'i1'])  / maint_cost[f'i1']
         cost_reduct_per = round(-cost_reduct_per*100, 1)
-        tab_summary_cell_text2 = plot_data[f'i{inv_num}'][9] + [[f'{na_reduct_per}%'], [f'{cost_reduct_per}%']]
+        tab_summary_cell_text2 = tab_summary_cell_text1 + [['N/A Reduction', f'{na_reduct_per}%'], ['Cost Reduction', f'{cost_reduct_per}%']]
 
-        tab_summary_cell_color2 = [['g'], ['r'], ['w'], ['w'], ['w'], ['w']]
+        tab_summary_cell_color2 = tab_summary_cell_color1 + [['w', 'g'], ['w', 'g']]
 
 
 
@@ -128,27 +128,27 @@ def draw_plot_f3 (inv_num, canvas_fig_ax_dict, day, day_it, plot_data, maint_na_
     # fig_3, (ax_3, ax_4) = plt.subplots(1,2,figsize=(6, 4))
 
         canvas_fig_ax_dict [f'ax_i{inv_num}_f3'][0].axis('off')
-        tab_history = canvas_fig_ax_dict [f'ax_i{inv_num}_f3'][0].table(cellText=tab_history_cell_text, cellColours = tab_history_cell_color, cellLoc = 'center', colLabels=['Day', 'Maint.'],loc='center',colLoc='center',)
+        tab_history = canvas_fig_ax_dict [f'ax_i{inv_num}_f3'][0].table(cellText=tab_history_cell_text,
+                                                                        cellColours = tab_history_cell_color,
+                                                                        cellLoc = 'center',
+                                                                        colLabels=['Day', 'Maint.'],
+                                                                        loc='center',
+                                                                        colLoc='center')
         canvas_fig_ax_dict [f'ax_i{inv_num}_f3'][0].set_title(f"Maint. Actions EUR = {eur_proposed}")
 
         canvas_fig_ax_dict [f'ax_i{inv_num}_f3'][1].axis('off')
         if inv_num == 1:
-            table_summary = canvas_fig_ax_dict [f'ax_i{inv_num}_f3'][1].table(cellText=tab_summary_cell_text1, cellColours = tab_summary_cell_color1, cellLoc = 'center', rowLabels=['# of PM', '# of CM', 'N/A Days', 'Maint. Cost'],rowLoc='left', loc='center', colWidths=[0.5, 0.1])
+            table_summary = canvas_fig_ax_dict [f'ax_i{inv_num}_f3'][1].table(cellText=tab_summary_cell_text1,
+                                                                              cellColours = tab_summary_cell_color1,
+                                                                              cellLoc = 'center',
+                                                                              loc='center',
+                                                                              colLoc='center')
         elif inv_num ==2:  # proposed table add two rows as comparison
-            if (maint_na_days[f'i1'] != 0 and maint_cost[f'i1'] != 0):
-                table_summary = canvas_fig_ax_dict[f'ax_i{inv_num}_f3'][1].table(cellText=tab_summary_cell_text2,
+            table_summary = canvas_fig_ax_dict[f'ax_i{inv_num}_f3'][1].table(cellText=tab_summary_cell_text2,
                                                                              cellColours=tab_summary_cell_color2,
                                                                              cellLoc='center',
-                                                                             rowLabels=['# of PM', '# of CM', 'N/A Days',
-                                                                                        'Maint. Cost', 'N/A Reduction', 'Cost Reduction'], rowLoc='left',
-                                                                             loc='center', colWidths=[0.5, 0.1])
-            else:
-                able_summary = canvas_fig_ax_dict[f'ax_i{inv_num}_f3'][1].table(cellText=tab_summary_cell_text2,
-                                                                                cellColours=tab_summary_cell_color2,
-                                                                                cellLoc='center',
-                                                                                rowLabels=['# of PM', '# of CM', 'N/A Days',
-                                                                                           'Maint. Cost'], rowLoc='left',
-                                                                                loc='center', colWidths=[0.5, 0.1])
+                                                                             loc='center',
+                                                                             colLoc='center')
         canvas_fig_ax_dict [f'ax_i{inv_num}_f3'][1].set_title(f"Maint. Metrics until Day {day}")
 
         # Close the figure to free up memory

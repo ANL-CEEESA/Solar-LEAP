@@ -301,7 +301,7 @@ while True:
                             day_it[f'i{inv_num}'] = 0
 
                             canvas_fig_ax_dict[f'fig_i{inv_num}_f3'].savefig(
-                                f'./figure_results_save/eur_{eur_proposed}_time_' + timestr + f'_inv_{inv_num}.png')
+                                f'./figure_results_save/VIS_eur_{eur_proposed}_time_' + timestr + f'_inv_{inv_num}.png')
 
 
 

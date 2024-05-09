@@ -23,14 +23,17 @@ def dist_prep(input_scale_dict, inv_num, day_it_inv, ft_sample_inv):
     input_scale = input_scale_dict [f'i{inv_num}']
     shape1 = 4  # Shape parameter (you can adjust this)
     scale1 = input_scale
-    mean1 = scale1 * ((np.pi / 2) ** (1 / shape1))
-    mean_current = mean1 - day_it_inv
-    scale1 = mean_current / (np.pi / 2) ** (1 / shape1)
+    # mean1 = scale1 * ((np.pi / 2) ** (1 / shape1))
+    # mean_current = mean1 - day_it_inv
+    # scale1 = mean_current / (np.pi / 2) ** (1 / shape1)
 
     # Generate data points, to be updated by Liming's pdf and cdf
     x_values = np.linspace(0, weibull_min.ppf(0.999, shape1, scale=scale1), 200)
-    y_pdf_values = weibull_min.pdf(x_values, shape1, scale=scale1)
-    y_cdf_values = weibull_min.cdf(x_values, shape1, scale=scale1)
+    # y_pdf_values = weibull_min.pdf(x_values, shape1, scale=scale1)
+    # y_cdf_values = weibull_min.cdf(x_values, shape1, scale=scale1)
+
+    y_pdf_values = weibull_min.pdf(x_values + day_it_inv, shape1, scale=scale1) / (1 - weibull_min.cdf(day_it_inv, shape1, scale=scale1))
+    y_cdf_values = (weibull_min.cdf(x_values + day_it_inv, shape1, scale=scale1) - weibull_min.cdf(day_it_inv, shape1, scale=scale1)) / (1 - weibull_min.cdf(day_it_inv, shape1, scale=scale1))
 
     if day_it_inv == 0:
         while True:
@@ -43,13 +46,23 @@ def dist_prep(input_scale_dict, inv_num, day_it_inv, ft_sample_inv):
 
     return [x_values, y_pdf_values, y_cdf_values, ft_sample_inv, distance_ft]
 
-def dmc_prep(x_values, day_it_inv, input_c_f, input_c_p, y_cdf_values, distance_ft):
+def dmc_prep(inv_num, x_values, day_it_inv, input_c_f, input_c_p, y_cdf_values, distance_ft):
     Dynamic_maintenance_cost_list = []  # for all periods, we will calculate the dynamic maintenance costs
+
 
     x_indices = range(1, len(x_values))
     # One is observation time and the other one is "t" time periods after the observation.
     c_f = input_c_f
     c_p = input_c_p
+
+    # for x in x_indices:  # Maintenance time C_x
+    #     numerator = c_p * (1 - y_cdf_values[x]) + c_f * y_cdf_values[x]
+    #     denominator = day_it_inv  # could be set to zero as well can try both
+    #     for y in x_indices:
+    #         if y<=x:
+    #             denominator += (1 - y_cdf_values[y])
+    #
+    #     func_value = numerator / denominator
 
     for x in x_indices:  # Maintenance time C_x
         func_value = 0
@@ -68,7 +81,10 @@ def dmc_prep(x_values, day_it_inv, input_c_f, input_c_p, y_cdf_values, distance_
     min_cost_maint_day = math.floor(x_values[min_idx_maint_day])
     min_cost_maint_cost = Dynamic_maintenance_cost_list[min_idx_maint_day]
 
-    distance_mt = min_cost_maint_day - 250
+    if inv_num == 1:
+        distance_mt = min_cost_maint_day - 201
+    elif inv_num == 2:
+        distance_mt = min_cost_maint_day - 301
     # proposed should be better?
     # mt2 = min_cost_maint_day - simulation_step_days
     # mt2_distance = mt2 - day_it
@@ -100,7 +116,7 @@ def inv_simulation (inv_num, input_scale_dict, input_c_p, input_c_f, na_days_pm,
     # stage 1 - distribution
     [x_values, y_pdf_values, y_cdf_values, ft_sample_inv, distance_ft] = dist_prep(input_scale_dict, inv_num, day_it_inv, ft_sample_inv)
     # stage 2 - dynamic maintenance cost
-    [distance_mt, ft_line_flag, Dynamic_maintenance_cost_list, min_cost_maint_day, min_cost_maint_cost] = dmc_prep (x_values, day_it_inv, input_c_f, input_c_p, y_cdf_values, distance_ft)
+    [distance_mt, ft_line_flag, Dynamic_maintenance_cost_list, min_cost_maint_day, min_cost_maint_cost] = dmc_prep (inv_num, x_values, day_it_inv, input_c_f, input_c_p, y_cdf_values, distance_ft)
 
 
 
@@ -118,7 +134,7 @@ def inv_simulation (inv_num, input_scale_dict, input_c_p, input_c_f, na_days_pm,
         day_it_inv = 0
 
         [x_values, y_pdf_values, y_cdf_values, ft_sample_inv, distance_ft] = dist_prep(input_scale_dict, inv_num, day_it_inv, ft_sample_inv)
-        [distance_mt, ft_line_flag, Dynamic_maintenance_cost_list, min_cost_maint_day, min_cost_maint_cost] = dmc_prep (x_values, day_it_inv, input_c_f, input_c_p, y_cdf_values, distance_ft)
+        [distance_mt, ft_line_flag, Dynamic_maintenance_cost_list, min_cost_maint_day, min_cost_maint_cost] = dmc_prep (inv_num, x_values, day_it_inv, input_c_f, input_c_p, y_cdf_values, distance_ft)
 
 
 
@@ -141,12 +157,16 @@ def inv_simulation (inv_num, input_scale_dict, input_c_p, input_c_f, na_days_pm,
     maint_na_days_inv = maint_na_days[f'i{inv_num}']
     maint_cost_inv = maint_cost[f'i{inv_num}']
     if day != 0:
-        tab_summary_cell_text = [[tab_summary_pm_count], [tab_summary_cm_count], [f'{round(maint_na_days_inv/(day/365), 2)}/yr'], [f'${round(maint_cost_inv * (11/(18*6000/60)) / ((day/365)) , 2)}/kW-yr']]
+        tab_summary_cell_text = [['# of PM', tab_summary_pm_count],
+                                 ['# of CM', tab_summary_cm_count],
+                                 ['N/A Days', f'{round(maint_na_days_inv/(day/365), 2)}/yr'],
+                                 ['Maint. Cost', f'${round(maint_cost_inv * (11/(18*6000/60)) / ((day/365)) , 2)}/kW-yr']]
         # aim to put the benchmark to $11/kW-yr, so each year per unit base is 18 CM in 60 yrs average to per year multiply by $11
     else:
-        tab_summary_cell_text = [[tab_summary_pm_count], [tab_summary_cm_count],
-                                 [f'0/yr'],
-                                 [f'$ 0/kW-yr']]
+        tab_summary_cell_text = [['# of PM', tab_summary_pm_count],
+                                 ['# of CM', tab_summary_cm_count],
+                                 ['N/A Days', f'0/yr'],
+                                 ['Maint. Cost', f'$ 0/kW-yr']]
     # TODO: 60000 needs to be verified on 0.0148 for multiple simulation times
 
 
